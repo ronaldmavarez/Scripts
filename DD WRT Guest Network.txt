@@ -1,0 +1,15 @@
+#Configuring the guest network in DD WRT 
+#This goes under Administration -> Commands 
+
+#Let br1 access WAN port: 
+iptables -t nat -I POSTROUTING -o `get_wanface` -j SNAT --to `nvram get wan_ipaddr` 
+
+#Keep the two wireless networks from talking to each other: 
+iptables -I FORWARD -i br0 -o br1 -j logdrop 
+iptables -I FORWARD -i br1 -o br0 -j logdrop 
+
+#Keep br1 from accessing the router: 
+iptables -I INPUT -i br1 -p tcp --dport telnet -j REJECT --reject-with tcp-reset 
+iptables -I INPUT -i br1 -p tcp --dport ssh -j REJECT --reject-with tcp-reset 
+iptables -I INPUT -i br1 -p tcp --dport www -j REJECT --reject-with tcp-reset 
+iptables -I INPUT -i br1 -p tcp --dport https -j REJECT --reject-with tcp-reset
