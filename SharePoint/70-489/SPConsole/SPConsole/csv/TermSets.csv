@@ -1,0 +1,11 @@
+Term Set Name,Term Set Description,LCID,Available for Tagging,Term Description,Level 1 Term,Level 2 Term,Level 3 Term,Level 4 Term,Level 5 Term,Level 6 Term,Level 7 Term
+Department,Company Department,,TRUE,,MARKETING,,,,,,
+,,,TRUE,,IT,SERVICES,,,,,
+,,,TRUE,,IT,CONSULTING,,,,,
+,,,TRUE,,IT,HELP DESK,,,,,
+,,,TRUE,,SALES,EAST SALES,,,,,
+,,,TRUE,,SALES,WEST SALES,,,,,
+,,,TRUE,,SALES,CENTRAL SALES,,,,,
+,,,TRUE,,FINANCE,,,,,,
+,,,TRUE,,LEGAL,,,,,,
+,,,TRUE,,HR,,,,,,

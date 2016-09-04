@@ -1,0 +1,8 @@
+C:\Users\Administrator\Desktop\Temp\SPConsole\SPConsole\bin\Debug\SPConsole.exe.config
+C:\Users\Administrator\Desktop\Temp\SPConsole\SPConsole\bin\Debug\SPConsole.exe
+C:\Users\Administrator\Desktop\Temp\SPConsole\SPConsole\bin\Debug\SPConsole.pdb
+C:\Users\Administrator\Desktop\Temp\SPConsole\SPConsole\obj\Debug\SPConsole.csproj.SPConsole.exe.config
+C:\Users\Administrator\Desktop\Temp\SPConsole\SPConsole\obj\Debug\SPConsole.exe
+C:\Users\Administrator\Desktop\Temp\SPConsole\SPConsole\obj\Debug\SPConsole.pdb
+C:\Users\Administrator\Desktop\Temp\SPConsole\SPConsole\bin\Debug\Newtonsoft.Json.dll
+C:\Users\Administrator\Desktop\Temp\SPConsole\SPConsole\obj\Debug\SPConsole.csprojResolveAssemblyReference.cache
