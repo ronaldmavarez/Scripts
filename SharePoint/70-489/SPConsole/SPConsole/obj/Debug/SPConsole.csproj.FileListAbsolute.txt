@@ -6,3 +6,6 @@ C:\Users\Administrator\Desktop\Temp\SPConsole\SPConsole\obj\Debug\SPConsole.exe
 C:\Users\Administrator\Desktop\Temp\SPConsole\SPConsole\obj\Debug\SPConsole.pdb
 C:\Users\Administrator\Desktop\Temp\SPConsole\SPConsole\bin\Debug\Newtonsoft.Json.dll
 C:\Users\Administrator\Desktop\Temp\SPConsole\SPConsole\obj\Debug\SPConsole.csprojResolveAssemblyReference.cache
+C:\Users\Ronald\Documents\GitHub\Scripts\SharePoint\70-489\SPConsole\SPConsole\bin\Debug\SPConsole.exe.config
+C:\Users\Ronald\Documents\GitHub\Scripts\SharePoint\70-489\SPConsole\SPConsole\obj\Debug\SPConsole.exe
+C:\Users\Ronald\Documents\GitHub\Scripts\SharePoint\70-489\SPConsole\SPConsole\obj\Debug\SPConsole.pdb
