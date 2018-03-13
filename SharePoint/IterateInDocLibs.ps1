@@ -16,12 +16,6 @@ GETTING ALL THE URLs, THIS INCLUDE SITE COLLECTION AND WEBs
 $currentWebAppUrl = "https://SharePointURL"
 $SiteColls = Get-SPWebApplication $currentWebAppUrl | Get-SPSiteAdministration -Limit ALL | Select URL
 
-<#
-#IF JUST A SITE COLLECTION INSTEAD OF THE ALL WEBAPP
-$SiteColls = New-Object System.Object
-$SiteColls | Add-Member -type NoteProperty -name url -Value "https://enicom-dev.eninorge.pri/ict_im"
-#>
-
 foreach ($SiteColl in $SiteColls){
     $currentSiteURL = $SiteColl.url
     
