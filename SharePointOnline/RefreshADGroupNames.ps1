@@ -30,7 +30,7 @@ foreach ($siteURL in $siteURLs){
     }
 
     #Foreach with all the groups that needs an update
-    $localADs | Where-Object { $_.LocalName -ne $_.ADName } | ForEach-Object {
+    $localADs | Where-Object { $_.LocalName -ne $_.ADName -and $null -ne $_.ADName } | ForEach-Object {
         $info = "Updating from '$($_.LocalName)' to '$($_.ADName)' - $($_.SID) - $siteURL"
         $infos += $info
         Write-Host $info -ForegroundColor Yellow
