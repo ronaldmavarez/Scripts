@@ -47,19 +47,20 @@ foreach ($row in $data) { #Foreach to fill up the data, in this code we are gett
     # $row.MembersToBeRemovedCount = $MembersToBeRemoved.Count
 }
 
-$siteURLs = @(
-    "https://tenant.sharepoint.com/sites/site1",
-    "https://tenant.sharepoint.com/sites/site2",
-    "https://tenant.sharepoint.com/sites/site3"
-)
+# #Open Excel: -> Data -> From Text/CSV -> Pick the file -> Open
+# $data | Export-Csv "c:\temp\ADGroupsReport.csv" -NoTypeInformation -Encoding UTF8 #Report info
+
+$sites = Get-PnPTenantSite -Filter "Url -like '/sites/'" | Where-Object { $_.Template -ne "RedirectSite#0" } #covering rest of the sites
+$siteURLs = $sites.Url
 
 foreach ($siteURL in $siteURLs) {
-    Write-Host "Processing $siteURL" -ForegroundColor Green
     Set-SPOUser -site $siteUrl -LoginName $adminUserLogin -IsSiteCollectionAdmin $True | out-null #Set the user as site collection admin
+    Write-Host "Processing $siteURL" -ForegroundColor Green
     Connect-PnPOnline -Url $siteURL -Interactive
     $adGroupToken = "c:0t.c|tenant|"
 
     #Fixing SharePoint Groups
+    Write-Host "Processing SP Groups" -ForegroundColor Yellow
     $siteGroups = Get-PnPGroup
     foreach ($siteGroup in $siteGroups){ #$siteGroup = $siteGroups[0]
         $groupMembers = Get-PnPGroupMember -Group $siteGroup.Title
@@ -75,6 +76,7 @@ foreach ($siteURL in $siteURLs) {
     }
 
     #Web Permissions
+    Write-Host "Processing web permissions" -ForegroundColor Yellow
     $web = Get-PnPWeb
     Get-PnPProperty -ClientObject $web -Property @("RoleAssignments") | Out-null
     $web.RoleAssignments | ForEach-Object { Get-PnPProperty -ClientObject $_ -Property @("RoleDefinitionBindings", "Member") | Out-null }
@@ -93,30 +95,32 @@ foreach ($siteURL in $siteURLs) {
     }
 
     #List Permissions
-    $cpLists = Get-PnPList -Includes HasUniqueRoleAssignments, RoleAssignments | Where-Object { $_.HasUniqueRoleAssignments -eq $true -and $_.Hidden -eq $false }
-    $cpLists.RoleAssignments | ForEach-Object { Get-PnPProperty -ClientObject $_ -Property @("RoleDefinitionBindings", "Member") | Out-null }
-    foreach ($list in $cpLists) { #$list = $cpLists[0]
-        $listRoleAssAll = $list.RoleAssignments #| Where-Object { $_.Member.PrincipalType -eq 'SecurityGroup' }
-        $listRoleAss2Check = $listRoleAssAll | Where-Object { $_.Member.PrincipalType -eq 'SecurityGroup' -and $data.OldGroupSID.Contains($_.Member.LoginName.Replace($adGroupToken, "")) -and $_.RoleDefinitionBindings.Name -ne "Limited Access" }
-        
-        foreach ($roleAss in $listRoleAss2Check) { #$roleAss = $listRoleAss2Check[0]
-            $oldADGroupID = $roleAss.Member.LoginName.Replace($adGroupToken, "")
-            $oldADGroupIDWithToken = $roleAss.Member.LoginName
-            $newADGroupIDWithToken = $adGroupToken + ($data | Where-Object { $_.OldGroupSID -eq $oldADGroupID }).NewGroupSID
+    Write-Host "Processing lists with unique permissions" -ForegroundColor Yellow
+    $cpLists = Get-PnPList -Includes HasUniqueRoleAssignments, RoleAssignments | Where-Object { $_.HasUniqueRoleAssignments -eq $true -and $_.Hidden -eq $false }    
+    if($cpLists.Count -gt 0){
+        $cpLists.RoleAssignments | ForEach-Object { Get-PnPProperty -ClientObject $_ -Property @("RoleDefinitionBindings", "Member") | Out-null }
+        foreach ($list in $cpLists) { #$list = $cpLists[0]
+            $listRoleAssAll = $list.RoleAssignments #| Where-Object { $_.Member.PrincipalType -eq 'SecurityGroup' }
+            $listRoleAss2Check = $listRoleAssAll | Where-Object { $_.Member.PrincipalType -eq 'SecurityGroup' -and $data.OldGroupSID.Contains($_.Member.LoginName.Replace($adGroupToken, "")) -and $_.RoleDefinitionBindings.Name -ne "Limited Access" }
             
-            foreach ($rolDefBinding in $roleAss.RoleDefinitionBindings | Where-Object { $_.Name -ne "Limited Access" }) { #$rolDefBinding = $roleAss.RoleDefinitionBindings[0]
-                #$rolDefBinding.Name
-                Set-PnPListPermission -Identity $list.Title -User $newADGroupIDWithToken -AddRole $rolDefBinding.Name
-                Set-PnPListPermission -Identity $list.Title -User $oldADGroupIDWithToken -RemoveRole $rolDefBinding.Name
+            foreach ($roleAss in $listRoleAss2Check) { #$roleAss = $listRoleAss2Check[0]
+                $oldADGroupID = $roleAss.Member.LoginName.Replace($adGroupToken, "")
+                $oldADGroupIDWithToken = $roleAss.Member.LoginName
+                $newADGroupIDWithToken = $adGroupToken + ($data | Where-Object { $_.OldGroupSID -eq $oldADGroupID }).NewGroupSID
+                
+                foreach ($rolDefBinding in $roleAss.RoleDefinitionBindings | Where-Object { $_.Name -ne "Limited Access" }) { #$rolDefBinding = $roleAss.RoleDefinitionBindings[0]
+                    #$rolDefBinding.Name
+                    Set-PnPListPermission -Identity $list.Title -User $newADGroupIDWithToken -AddRole $rolDefBinding.Name
+                    Set-PnPListPermission -Identity $list.Title -User $oldADGroupIDWithToken -RemoveRole $rolDefBinding.Name
+                }
             }
         }
-    }
+    }    
 
     #List Item Permissions
     $ctEnabledLists = Get-PnPList -Includes Fields | Where-Object { $_.ContentTypesEnabled -eq $true -and $_.Hidden -eq $false -and $_.ItemCount -ne 0 } 
     foreach ($list in $ctEnabledLists) { #$list = $ctEnabledLists[0]
         Write-Host "Processing list '$($list.Title)' with unique permissions" -ForegroundColor Yellow
-
         #$uniqueRoleItems = Get-PnPListItem -List $list.Title -PageSize 5000 -Query "<View><Query><Where><IsNotNull><FieldRef Name='SharedWithDetails' /></IsNotNull></Where></Query></View>" #Unique permission items
         #$uniqueRoleItems | Foreach-Object { Get-PnPProperty -ClientObject $_ -Property @("HasUniqueRoleAssignments", "RoleAssignments") } | Out-null
         $items = Get-PnPListItem -List $list.Title -Fields "Title" -PageSize 5000 
