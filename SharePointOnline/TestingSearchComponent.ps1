@@ -4,7 +4,7 @@
 #Business Contact Person: N/A
 
 #What: Check if the amount of items of lists are ALL searchable
-#Why: We had challenges when coding Gas Sales, there were ghost items showing up from search, these items were deleted and still visible from search
+#Why: there are ghost items showing up from search, these items were deleted and still visible from search
 #When: When you needed
 #Where: Script server or locally
 
