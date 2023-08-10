@@ -9,11 +9,10 @@
 
 #Note: This script does not remove AD groups that are Site Collection Admins, and it does not check sub-sites
 
-$tenantName = "TenantName"
-$tenantDomainUrl = "$tenantName.onmicrosoft.com"
-$appClientID = "ca439031-55b4-4d7a-a2e9-aa76f16d04c8"
-$certThumprint = "21EC0EB4EF1DB9B4EF630B55A26FE89EE36E0C7B"
-$siteURL = "https://$tenantName.sharepoint.com"
+$tenantDomainUrl = "tenant.onmicrosoft.com"
+$appClientID = ""
+$certThumprint = ""
+$siteURL = "https://tenant.sharepoint.com"
 $adGroupToken = "c:0t.c|tenant|"
 
 Connect-PnPOnline -Url $siteURL -Tenant $tenantDomainUrl -ClientId $appClientID -Thumbprint $certThumprint #works if cert is installed
@@ -25,7 +24,6 @@ $siteURLs = $sites.Url
 $azureADGroups = Get-PnPAzureADGroup | Select-Object Id, DisplayName, MailNickname
 
 $infos = New-Object -TypeName "System.Collections.ArrayList" #Array to collect all the info
-$notDeletedGroups = New-Object -TypeName "System.Collections.ArrayList" #Array to collect all the non deleted groups
 $siteURLs.foreach({
     $percentComplete = ($siteURLs.IndexOf($_) / $siteURLs.Count) * 100
     Write-Progress -Activity "Search in Progress" -Status "$percentComplete% Complete:" -PercentComplete $percentComplete
@@ -50,39 +48,18 @@ $siteURLs.foreach({
 
     if($deletedLocalADGroups.Count -gt 0){ #if groups to delete are found
         $info = "$siteURL contains $($deletedLocalADGroups.Count) adGroup(s) to delete"
+        $infos.Add($info) | Out-Null #Suppressing output
         Write-Host $info -ForegroundColor Red
 
         $deletedLocalADGroups.foreach({
             $groupLoginName = $_.LoginName
-            $groupName = $_.LocalName
-            
-            $temp = @(
-                [PSCustomObject]@{
-                    SiteURL = $siteURL
-                    ADGroupLoginName = $groupLoginName
-                    ADGroupName = $groupName
-                }
-            )
-    
-            $infos.Add($temp) | Out-Null #Suppressing output
 
-            try {    
-                $ctx = Get-PnPContext 
-                $ctx.Web.SiteUsers.RemoveByLoginName($groupLoginName) #remove the group from SharePoint site
-                $ctx.ExecuteQuery()
-            }catch {
-                Write-Host "The group '$groupName' is site collection admin" -ForegroundColor Red 
-                $notDeletedGroups.Add($temp) | Out-Null #Suppressing output
-            }
+            $ctx = Get-PnPContext 
+            $ctx.Web.SiteUsers.RemoveByLoginName($groupLoginName) #remove the group from SharePoint site
+            $ctx.ExecuteQuery()
         })
     }
 })
 
-$filePath = "C:\TEMP\CleanDeletedADGroups.csv"
-$infosArray = @(); $infosArray = $infos.foreach({ $_ }) #stupid hack because System.Collections.ArrayList doesn't work when exporting CSVs 
-$infosArray | Export-Csv $filePath -NoTypeInformation -Encoding UTF8 -Delimiter ';'
-
-#Site Collection Admin needs to be removed manually, here are the URLs 
-$notDeletedGroups.SiteUrl.Foreach({
-    $_ + "/_layouts/15/mngsiteadmin.aspx"
-}) 
+#Print Out the info
+$infos
